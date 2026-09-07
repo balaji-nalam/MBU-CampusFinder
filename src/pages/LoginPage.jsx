@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthForm from '../components/auth/AuthForm'
+import GoogleSignInButton from '../components/auth/GoogleSignInButton'
 import { useAuth } from '../context/AuthContext'
 import { getAuthErrorMessage } from '../utils/authErrorMessages'
 
@@ -14,9 +15,10 @@ const initialForm = {
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const [form, setForm] = useState(initialForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const handleChange = (event) => {
@@ -46,10 +48,31 @@ function LoginPage() {
       await login({ email: trimmedEmail, password: form.password })
       navigate('/dashboard', { replace: true })
     } catch (submissionError) {
-      const message = submissionError?.message || getAuthErrorMessage(submissionError?.code)
+      const message = submissionError?.code
+        ? getAuthErrorMessage(submissionError.code)
+        : submissionError?.message || 'Login failed. Please try again.'
       setError(message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    if (isSubmitting || isGoogleSubmitting) return
+    setError('')
+    setIsGoogleSubmitting(true)
+
+    try {
+      await loginWithGoogle()
+      navigate('/dashboard', { replace: true })
+    } catch (googleError) {
+      console.error('Google sign-in error:', googleError)
+      const message = googleError?.code
+        ? getAuthErrorMessage(googleError.code)
+        : googleError?.message || 'Google sign-in could not be completed. Please try again.'
+      setError(message)
+    } finally {
+      setIsGoogleSubmitting(false)
     }
   }
 
@@ -74,7 +97,19 @@ function LoginPage() {
           subtitle="Welcome back to MBU CampusFinder."
           onSubmit={handleSubmit}
           submitLabel="Login"
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmitting || isGoogleSubmitting}
+          extraContent={
+            <>
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+              <GoogleSignInButton
+                onClick={handleGoogleSignIn}
+                isLoading={isGoogleSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
+              />
+            </>
+          }
           footer={
             <>
               <p>
@@ -98,6 +133,7 @@ function LoginPage() {
               placeholder="you@example.com"
               autoComplete="email"
               required
+              disabled={isSubmitting || isGoogleSubmitting}
             />
           </label>
 
@@ -111,6 +147,7 @@ function LoginPage() {
               placeholder="Enter your password"
               autoComplete="current-password"
               required
+              disabled={isSubmitting || isGoogleSubmitting}
             />
           </label>
         </AuthForm>

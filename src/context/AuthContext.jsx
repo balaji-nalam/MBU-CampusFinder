@@ -8,15 +8,17 @@ import {
 } from 'react'
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   updateProfile,
 } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { auth, db } from '../api/firebase'
+import { auth, db, googleProvider } from '../api/firebase'
 
 const AuthContext = createContext(null)
 
@@ -143,6 +145,45 @@ export function AuthProvider({ children }) {
     return userCredential.user
   }, [fetchUserProfile])
 
+  const loginWithGoogle = useCallback(async () => {
+    if (!auth) {
+      throw new Error('Firebase is not configured. Please add your project environment variables.')
+    }
+
+    const provider = googleProvider || new GoogleAuthProvider()
+    const userCredential = await signInWithPopup(auth, provider)
+    const { user } = userCredential
+
+    if (db && user) {
+      try {
+        const profileRef = doc(db, 'users', user.uid)
+        const profileSnapshot = await getDoc(profileRef)
+
+        if (!profileSnapshot.exists()) {
+          await setDoc(profileRef, {
+            uid: user.uid,
+            fullName: user.displayName?.trim() || 'Campus User',
+            email: user.email?.trim().toLowerCase() || '',
+            photoURL: user.photoURL || null,
+            role: 'user',
+            authProvider: 'google.com',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          })
+        }
+      } catch (profileError) {
+        console.error('Failed to initialize user profile for Google user:', profileError)
+      }
+    }
+
+    const token = await user.getIdTokenResult(true)
+    setIsAdmin(Boolean(token.claims.admin))
+    await fetchUserProfile(user.uid)
+    setCurrentUser(user)
+
+    return user
+  }, [fetchUserProfile])
+
   const logout = useCallback(async () => {
     if (!auth) {
       return
@@ -181,23 +222,46 @@ export function AuthProvider({ children }) {
     return refreshedUser
   }, [fetchUserProfile])
 
+  const isGoogleUser = Boolean(
+    currentUser?.providerData?.some((provider) => provider.providerId === 'google.com'),
+  )
+
+  const isEmailVerified = Boolean(currentUser?.emailVerified || isGoogleUser)
+
   const value = useMemo(
     () => ({
       currentUser,
       userProfile,
       loading,
       isAuthenticated: Boolean(currentUser),
-      isEmailVerified: Boolean(currentUser?.emailVerified),
+      isEmailVerified,
+      isGoogleUser,
       isAdmin,
       register,
       login,
+      loginWithGoogle,
       logout,
       resendVerificationEmail,
       resetPassword,
       refreshUser,
       fetchUserProfile,
     }),
-    [currentUser, fetchUserProfile, isAdmin, loading, login, logout, refreshUser, register, resendVerificationEmail, resetPassword, userProfile],
+    [
+      currentUser,
+      fetchUserProfile,
+      isAdmin,
+      isEmailVerified,
+      isGoogleUser,
+      loading,
+      login,
+      loginWithGoogle,
+      logout,
+      refreshUser,
+      register,
+      resendVerificationEmail,
+      resetPassword,
+      userProfile,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

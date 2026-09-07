@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function VerifyEmailPage() {
-  const { currentUser, loading, resendVerificationEmail, refreshUser, logout } = useAuth()
+  const { currentUser, loading, resendVerificationEmail, refreshUser, logout, isEmailVerified } = useAuth()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
@@ -20,6 +20,10 @@ function VerifyEmailPage() {
 
   if (!currentUser) {
     return <Navigate to="/login" replace />
+  }
+
+  if (isEmailVerified) {
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleResend = async () => {
