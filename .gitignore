@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.vercel
+.vite
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+temp-vite-app/
+service-account*.json
+*-firebase-adminsdk-*.json
+google-application-credentials*.json

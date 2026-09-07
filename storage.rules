@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function ownedReport(uid, reportId) {
+      return firestore.get(/databases/(default)/documents/reports/$(reportId)).data.reportedByUid == uid;
+    }
+
+    function publicApprovedReport(reportId) {
+      let report = firestore.get(/databases/(default)/documents/reports/$(reportId)).data;
+      return report.status == 'approved' && report.visibility == 'public';
+    }
+
+    match /reports/{uid}/{reportId}/{fileName} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        isAdmin() ||
+        publicApprovedReport(reportId)
+      );
+      allow create, update: if isVerifiedUser() &&
+        request.auth.uid == uid &&
+        ownedReport(uid, reportId) &&
+        request.resource.size <= 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+  }
+}

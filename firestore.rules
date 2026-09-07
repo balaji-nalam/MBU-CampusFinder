@@ -1,0 +1,189 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function ownerReportMutationAllowed() {
+      return resource.data.reportedByUid == request.auth.uid &&
+        request.resource.data.reportedByUid == request.auth.uid &&
+        resource.data.status in ['pending', 'approved'] &&
+        request.resource.data.status == resource.data.status &&
+        request.resource.data.visibility == resource.data.visibility &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title',
+          'type',
+          'description',
+          'itemName',
+          'itemCategory',
+          'itemBrand',
+          'itemColor',
+          'itemLocation',
+          'campusZone',
+          'lastSeenDate',
+          'foundDate',
+          'contactPreference',
+          'additionalInfo',
+          'imageUrls',
+          'updatedAt',
+          'searchText',
+          'visibility'
+        ]);
+    }
+
+    function adminModerationAllowed() {
+      return isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'approvedByUid',
+          'approvedAt',
+          'rejectionReason',
+          'removedByUid',
+          'removedAt',
+          'visibility',
+          'updatedAt'
+        ]) &&
+        (
+          (
+            resource.data.status == 'pending' &&
+            request.resource.data.status == 'approved' &&
+            request.resource.data.approvedByUid == request.auth.uid &&
+            request.resource.data.approvedAt is timestamp &&
+            request.resource.data.visibility == 'public' &&
+            request.resource.data.rejectionReason == null &&
+            request.resource.data.removedByUid == null &&
+            request.resource.data.removedAt == null
+          ) || (
+            resource.data.status in ['pending', 'approved'] &&
+            request.resource.data.status == 'rejected' &&
+            request.resource.data.rejectionReason is string &&
+            request.resource.data.rejectionReason.size() > 0 &&
+            request.resource.data.approvedByUid == null &&
+            request.resource.data.approvedAt == null &&
+            request.resource.data.visibility == 'restricted' &&
+            request.resource.data.removedByUid == null &&
+            request.resource.data.removedAt == null
+          ) || (
+            resource.data.status in ['pending', 'approved', 'rejected'] &&
+            request.resource.data.status == 'removed' &&
+            request.resource.data.removedByUid == request.auth.uid &&
+            request.resource.data.removedAt is timestamp &&
+            request.resource.data.visibility == 'restricted'
+          )
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && request.resource.data.uid == userId && request.resource.data.role == 'user';
+      allow update: if isSignedIn() && request.auth.uid == userId && request.resource.data.uid == userId && request.resource.data.role == 'user' && request.resource.data.role == resource.data.role && request.resource.data.uid == resource.data.uid;
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow create: if isVerifiedUser() && request.resource.data.reportedByUid == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.visibility == 'private';
+
+      allow read: if isSignedIn() && (
+        resource.data.reportedByUid == request.auth.uid ||
+        (resource.data.status == 'approved' && resource.data.visibility == 'public') ||
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        adminModerationAllowed() ||
+        ownerReportMutationAllowed() ||
+        (
+          resource.data.reportedByUid == request.auth.uid &&
+          request.resource.data.reportedByUid == request.auth.uid &&
+          resource.data.status == 'approved' &&
+          request.resource.data.status == 'resolved' &&
+          request.resource.data.resolvedByUid == request.auth.uid &&
+          request.resource.data.visibility == 'restricted' &&
+          request.resource.data.updatedAt is timestamp &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status',
+            'resolvedAt',
+            'resolvedByUid',
+            'visibility',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if false;
+    }
+
+    match /contactRequests/{requestId} {
+      function validContactRequestReference() {
+        return exists(/databases/$(database)/documents/reports/$(request.resource.data.reportId)) &&
+          get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.status == 'approved' &&
+          get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.visibility == 'public' &&
+          get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reportedByUid != request.resource.data.requesterUid;
+      }
+
+      allow create: if isVerifiedUser() &&
+        request.resource.data.requesterUid == request.auth.uid &&
+        request.resource.data.reportId is string &&
+        request.resource.data.ownerUid is string &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() >= 10 &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp &&
+        validContactRequestReference() &&
+        request.resource.data.ownerUid == get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reportedByUid;
+
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.requesterUid ||
+        request.auth.uid == resource.data.ownerUid ||
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        (
+          request.auth.uid == resource.data.requesterUid &&
+          request.resource.data.requesterUid == resource.data.requesterUid &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.reportId == resource.data.reportId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.status == 'cancelled' &&
+          request.resource.data.updatedAt is timestamp
+        ) || (
+          request.auth.uid == resource.data.ownerUid &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.requesterUid == resource.data.requesterUid &&
+          request.resource.data.reportId == resource.data.reportId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.status in ['accepted', 'declined'] &&
+          request.resource.data.updatedAt is timestamp
+        ) || isAdmin()
+      );
+
+      allow delete: if false;
+    }
+
+    match /adminActions/{actionId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() &&
+        request.resource.data.actionType in ['APPROVE_REPORT', 'REJECT_REPORT', 'REMOVE_REPORT'] &&
+        request.resource.data.reportId is string &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.note is string;
+      allow update, delete: if false;
+    }
+  }
+}
