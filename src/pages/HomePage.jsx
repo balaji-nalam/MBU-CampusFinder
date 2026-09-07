@@ -135,9 +135,9 @@ function HomePage() {
 
       <section className="team-section" aria-labelledby="team-title">
         <div className="team-heading">
-          <p className="landing-kicker">The people behind the platform</p>
+          <p className="landing-kicker team-kicker">The people behind the platform</p>
           <h2 id="team-title">Meet the Team Behind CampusFinder</h2>
-          <p>A collaborative PBL project built for the MBU campus community.</p>
+          <p className="team-subtitle">A collaborative PBL project built for the MBU campus community.</p>
         </div>
 
         <article className="mentor-block">
@@ -155,14 +155,60 @@ function HomePage() {
         </article>
 
         <div className="team-heading team-members-heading">
-          <p className="landing-kicker">OUR PROJECT TEAM</p>
+          <p className="landing-kicker team-kicker">PROJECT TEAM</p>
+          <div className="team-heading-accent" aria-hidden="true" />
         </div>
+
         <div className="team-grid">
-          <article className="team-card"><div className="team-photo-frame"><img className="team-photo" src={satyaPhoto} alt="Satya Sai" /></div><h3>Satya Sai</h3><p>PBL Project Team</p></article>
-          <article className="team-card"><div className="team-photo-frame"><img className="team-photo" src={prasanthPhoto} alt="Prasanth" /></div><h3>Prasanth</h3><p>PBL Project Team</p></article>
-          <article className="team-card"><div className="team-photo-frame"><img className="team-photo" src={balajiPhoto} alt="Balaji Kiran Santhosh" /></div><h3>Balaji Kiran Santhosh</h3><p>PBL Project Team</p></article>
-          <article className="team-card"><div className="team-photo-frame"><img className="team-photo" src={sravanPhoto} alt="Sravan" /></div><h3>Sravan</h3><p>PBL Project Team</p></article>
-          <article className="team-card"><div className="team-photo-frame"><img className="team-photo" src={chandraPhoto} alt="Chandra Shakher" /></div><h3>Chandra Shakher</h3><p>PBL Project Team</p></article>
+          <article className="team-card">
+            <div className="team-card-inner">
+              <div className="team-photo-frame">
+                <img className="team-photo" src={satyaPhoto} alt="Satya Sai" />
+              </div>
+              <h3 className="team-member-name">Satya Sai</h3>
+              <p className="team-member-role">Authentication</p>
+            </div>
+          </article>
+
+          <article className="team-card">
+            <div className="team-card-inner">
+              <div className="team-photo-frame">
+                <img className="team-photo" src={prasanthPhoto} alt="Prasanth" />
+              </div>
+              <h3 className="team-member-name">Prasanth</h3>
+              <p className="team-member-role">Lost/Found Reporting</p>
+            </div>
+          </article>
+
+          <article className="team-card">
+            <div className="team-card-inner">
+              <div className="team-photo-frame">
+                <img className="team-photo" src={balajiPhoto} alt="Balaji Kiran Santhosh" />
+              </div>
+              <h3 className="team-member-name">Balaji Kiran Santhosh</h3>
+              <p className="team-member-role">UI &amp; Frontend</p>
+            </div>
+          </article>
+
+          <article className="team-card">
+            <div className="team-card-inner">
+              <div className="team-photo-frame">
+                <img className="team-photo" src={sravanPhoto} alt="Sravan" />
+              </div>
+              <h3 className="team-member-name">Sravan</h3>
+              <p className="team-member-role">Admin Panel &amp; Moderation</p>
+            </div>
+          </article>
+
+          <article className="team-card">
+            <div className="team-card-inner">
+              <div className="team-photo-frame">
+                <img className="team-photo" src={chandraPhoto} alt="Chandra Shakher" />
+              </div>
+              <h3 className="team-member-name">Chandra Shakher</h3>
+              <p className="team-member-role">Search &amp; Student Dashboard</p>
+            </div>
+          </article>
         </div>
       </section>
     </div>

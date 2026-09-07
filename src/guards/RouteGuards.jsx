@@ -11,14 +11,14 @@ function LoadingScreen() {
 }
 
 export function PublicRoute({ children }) {
-  const { currentUser, loading } = useAuth()
+  const { currentUser, loading, isEmailVerified } = useAuth()
 
   if (loading) {
     return <LoadingScreen />
   }
 
   if (currentUser) {
-    return <Navigate to={currentUser.emailVerified ? '/dashboard' : '/verify-email'} replace />
+    return <Navigate to={isEmailVerified ? '/dashboard' : '/verify-email'} replace />
   }
 
   return children
@@ -39,7 +39,7 @@ export function AuthenticatedRoute({ children }) {
 }
 
 export function VerifiedRoute({ children }) {
-  const { currentUser, loading } = useAuth()
+  const { currentUser, loading, isEmailVerified } = useAuth()
 
   if (loading) {
     return <LoadingScreen />
@@ -49,7 +49,7 @@ export function VerifiedRoute({ children }) {
     return <Navigate to="/login" replace />
   }
 
-  if (!currentUser.emailVerified) {
+  if (!isEmailVerified) {
     return <Navigate to="/verify-email" replace />
   }
 
@@ -57,7 +57,7 @@ export function VerifiedRoute({ children }) {
 }
 
 export function AdminRoute({ children }) {
-  const { currentUser, loading, isAdmin } = useAuth()
+  const { currentUser, loading, isAdmin, isEmailVerified } = useAuth()
 
   if (loading) {
     return <LoadingScreen />
@@ -67,7 +67,7 @@ export function AdminRoute({ children }) {
     return <Navigate to="/login" replace />
   }
 
-  if (!currentUser.emailVerified) {
+  if (!isEmailVerified) {
     return <Navigate to="/verify-email" replace />
   }
 

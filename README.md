@@ -93,16 +93,27 @@ The system provides Firebase Authentication, Cloud Firestore, Firebase Security 
 
 ## Main Features
 
+### Authentication Methods
+
+CampusFinder supports:
+- Email/password authentication
+- Google authentication
+- Email verification for email/password accounts
+- Forgot password
+- Protected routes
+- Firebase Authentication custom claims for admin authorization
+
+Google Sign-In is provided through Firebase Authentication using `signInWithPopup` and `GoogleAuthProvider`. Google-authenticated accounts are verified via Google and seamlessly access authenticated routes without requiring secondary email verification, while maintaining strict separation from custom-claim based admin authorization.
+
 ### Authentication
 
 - Email/password registration with full name, email, password, and confirmation.
+- Google Sign-In on both Login and Registration flows.
 - Login and logout through Firebase Authentication.
-- Email verification after registration.
+- Email verification for email/password accounts after registration.
 - Forgot-password email flow.
-- Authentication state loading and refresh.
+- Authentication state loading and token refresh.
 - Public, authenticated, verified-user, and admin route guards.
-
-The current client implementation uses email/password authentication. A Google provider is initialized in the Firebase module, but no Google sign-in action is exposed by the current UI.
 
 ### Lost and Found Reports
 
@@ -485,12 +496,14 @@ npm run set-admin # Assign admin: true; pass a UID or email after --
 ## Firebase Setup
 
 1. Create a Firebase project.
-2. Enable Email/Password Authentication.
-3. Create a Cloud Firestore database.
-4. Create or enable Firebase Storage if production image uploads are required.
-5. Add the Firebase web configuration through local environment variables.
-6. Deploy `firestore.rules`, `storage.rules`, and the Firestore indexes when using the Firebase CLI.
-7. Configure the administrator custom claim using the documented server-side script.
+2. Enable Email/Password Authentication in Firebase Console (Authentication → Sign-in method → Email/Password → Enable).
+3. Enable Google Authentication in Firebase Console (Authentication → Sign-in method → Google → Enable → Save).
+4. Add authorized domains in Firebase Console (Authentication → Settings → Authorized domains): include `localhost` for development and `mbu-campus-finder.vercel.app` for production deployment.
+5. Create a Cloud Firestore database.
+6. Create or enable Firebase Storage if production image uploads are required.
+7. Add the Firebase web configuration through local environment variables (`.env.local`).
+8. Deploy `firestore.rules`, `storage.rules`, and the Firestore indexes when using the Firebase CLI.
+9. Configure the administrator custom claim using the documented server-side script.
 
 The repository targets the Firestore database location configured in `firebase.json` (`asia-south2`). Firebase credentials are intentionally absent from this README.
 

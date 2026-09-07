@@ -1,9 +1,9 @@
 import { useAuth } from '../../context/AuthContext'
 
 function AuthStatusBanner() {
-  const { currentUser } = useAuth()
+  const { currentUser, isEmailVerified } = useAuth()
 
-  if (!currentUser || currentUser.emailVerified) {
+  if (!currentUser || isEmailVerified) {
     return null
   }
 

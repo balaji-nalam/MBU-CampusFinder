@@ -1,4 +1,13 @@
-function AuthForm({ title, subtitle, onSubmit, submitLabel, isSubmitting, children, footer }) {
+function AuthForm({
+  title,
+  subtitle,
+  onSubmit,
+  submitLabel,
+  isSubmitting,
+  children,
+  extraContent,
+  footer,
+}) {
   return (
     <section className="page-card auth-card">
       <h1>{title}</h1>
@@ -11,6 +20,8 @@ function AuthForm({ title, subtitle, onSubmit, submitLabel, isSubmitting, childr
           {isSubmitting ? 'Please wait...' : submitLabel}
         </button>
       </form>
+
+      {extraContent}
 
       {footer && <div className="auth-footer">{footer}</div>}
     </section>
