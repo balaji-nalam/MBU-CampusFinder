@@ -143,9 +143,9 @@ function HomePage() {
         <article className="mentor-block">
           <div className="mentor-label">PBL Mentor</div>
           <div className="mentor-layout">
-            <div className="mentor-photo-frame"><img src={mentorPhoto} alt="BASI REDDY M" /></div>
+            <div className="mentor-photo-frame"><img src={mentorPhoto} alt="BASI REDDY A" /></div>
             <div className="mentor-copy">
-              <h3>BASI REDDY M</h3>
+              <h3>BASI REDDY A</h3>
               <p className="mentor-role">Assistant Professor · PBL Mentor</p>
               <p className="mentor-university">Mohan Babu University</p>
               <h4>A Message of Gratitude</h4>
@@ -175,7 +175,7 @@ function HomePage() {
               <div className="team-photo-frame">
                 <img className="team-photo" src={prasanthPhoto} alt="Prasanth" />
               </div>
-              <h3 className="team-member-name">Prasanth</h3>
+              <h3 className="team-member-name">Prashanth</h3>
               <p className="team-member-role">Lost/Found Reporting</p>
             </div>
           </article>
@@ -205,7 +205,7 @@ function HomePage() {
               <div className="team-photo-frame">
                 <img className="team-photo" src={chandraPhoto} alt="Chandra Shakher" />
               </div>
-              <h3 className="team-member-name">Chandra Shakher</h3>
+              <h3 className="team-member-name">Chander Shekhar</h3>
               <p className="team-member-role">Search &amp; Student Dashboard</p>
             </div>
           </article>
